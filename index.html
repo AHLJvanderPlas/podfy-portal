@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>portal.podfy.net</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/public/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="brand">
+          <img src="https://podfy.app/logos/podfy-favicon.svg" alt="logo" />
+          <strong>portal.podfy.net</strong>
+        </div>
+        <span id="email" class="badge">loading…</span>
+        <div class="right">
+          <select id="slugSelect"></select>
+          <button id="setSlugBtn">Set active slug</button>
+          <span id="roleBadge" class="badge"></span>
+          <button id="stampBtn" title="Record a session now">Stamp session</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="transactions">Transactions</div>
+        <div class="tab" data-tab="settings">Settings</div>
+        <div class="tab" data-tab="users">Users</div>
+      </div>
+
+      <div id="panel-transactions" class="card">
+        <h3>Transactions (preview shell)</h3>
+        <div class="note">Default range: current month · sorted by created_at desc · server pagination later</div>
+        <table class="table" id="txTable">
+          <thead>
+            <tr>
+              <th>created_at</th>
+              <th>podfy_id</th>
+              <th>reference</th>
+              <th>location</th>
+              <th>file</th>
+              <th class="small">issue</th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="6" class="small">Wiring to API in Step 3.</td></tr></tbody>
+        </table>
+      </div>
+
+      <div id="panel-settings" class="card" style="display:none">
+        <h3>Settings</h3>
+        <div id="inactivityAlert" class="alert warn" style="display:none"></div>
+
+        <div class="kv">
+          <div>Selected slug</div><div id="kvSlug">-</div>
+          <div>Your role</div><div id="kvRole">-</div>
+          <div>Status</div><div id="kvStatus">-</div>
+          <div>Last session</div><div id="kvLast">-</div>
+          <div>Auto-pause policy</div><div id="kvPolicy">Pauses after 90 days inactivity</div>
+        </div>
+
+        <div class="note">Slug User sees recipients, webhooks, branding read-only; Slug Admin can edit (Step 3).</div>
+      </div>
+
+      <div id="panel-users" class="card" style="display:none">
+        <h3>Users (admin only)</h3>
+        <div class="note">This tab will list slug members with role/status and last_session_at (Step 3).</div>
+        <table class="table" id="usersTable">
+          <thead><tr><th>email</th><th>role</th><th>status</th><th>last_session_at</th></tr></thead>
+          <tbody><tr><td colspan="4" class="small">Coming in Step 3.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script src="/public/app.js"></script>
+  </body>
+</html>
