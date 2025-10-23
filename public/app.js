@@ -40,7 +40,10 @@ function getCookie(name) {
 }
 
 async function fetchSession() {
-  const res = await fetch("/api/auth/session");
+  const qs = new URLSearchParams(window.location.search);
+  const email = qs.get("email");
+  const url = email ? `/api/auth/session?email=${encodeURIComponent(email)}` : `/api/auth/session`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error("session failed");
   return res.json();
 }
