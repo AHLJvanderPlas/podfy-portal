@@ -129,7 +129,6 @@ setSlugBtn.addEventListener("click", async () => {
   setCookie("_portal_active_slug", slug, 180);
   const sess = await fetchSession();
   renderMembershipInfo(sess);
-  // if users tab active, refresh it
   if (document.querySelector(".tab.active")?.dataset.tab === "users") {
     await loadUsers();
   }
@@ -164,8 +163,10 @@ async function loadUsers() {
   usersTableBody.innerHTML = `<tr><td colspan="4" class="small">Loading…</td></tr>`;
   try {
     const res = await fetch(apiUrl(`/api/slugs/${encodeURIComponent(slug)}/users`));
-    const json = await res.json();
-    if (!res.ok || !json.ok) throw new Error(json.error || "load failed");
+    const txt = await res.text();
+    let json = {};
+    try { json = JSON.parse(txt); } catch {}
+    if (!res.ok || !json.ok) throw new Error(json.error || `HTTP ${res.status} ${txt}`);
     const rows = (json.items || []).map((r) => {
       const last = r.last_session_at ? new Date(r.last_session_at).toLocaleString() : "never";
       return `<tr data-id="${r.id}">
@@ -177,7 +178,7 @@ async function loadUsers() {
     }).join("");
     usersTableBody.innerHTML = rows || `<tr><td colspan="4" class="small">No users yet</td></tr>`;
   } catch (e) {
-    console.error(e);
+    console.error("users.load error:", e);
     usersTableBody.innerHTML = `<tr><td colspan="4" class="small">Failed to load users</td></tr>`;
   }
 }
@@ -188,15 +189,22 @@ addUserBtn?.addEventListener("click", async () => {
   const email = (newUserEmail.value || "").trim().toLowerCase();
   const role = newUserRole.value === "admin" ? "admin" : "user";
   if (!email) return alert("Enter an email");
-  const res = await fetch(apiUrl(`/api/slugs/${encodeURIComponent(slug)}/users`), {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email, role }),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.ok) return alert("Add failed");
-  newUserEmail.value = "";
-  await loadUsers();
+  try {
+    const res = await fetch(apiUrl(`/api/slugs/${encodeURIComponent(slug)}/users`), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, role }),
+    });
+    const txt = await res.text();
+    let json = {};
+    try { json = JSON.parse(txt); } catch {}
+    if (!res.ok || !json.ok) throw new Error(json.error || `HTTP ${res.status} ${txt}`);
+    newUserEmail.value = "";
+    await loadUsers();
+  } catch (e) {
+    console.error("users.add error:", e);
+    alert("Add failed: " + e.message);
+  }
 });
 
 // row click -> quick action prompt
@@ -209,21 +217,27 @@ $("panel-users").addEventListener("click", async (e) => {
   const choice = prompt("Action: promote, demote, pause, activate, delete");
   if (!choice) return;
 
-  if (choice === "delete") {
-    const res = await fetch(apiUrl(`/api/slugs/${encodeURIComponent(slug)}/users/${id}`), { method: "DELETE" });
-    if (!res.ok) return alert("Delete failed");
-  } else if (["promote","demote","pause","activate"].includes(choice)) {
-    const res = await fetch(apiUrl(`/api/slugs/${encodeURIComponent(slug)}/users/${id}`), {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: choice }),
-    });
-    if (!res.ok) return alert("Update failed");
-  } else {
-    alert("Unknown action");
-    return;
+  try {
+    if (choice === "delete") {
+      const res = await fetch(apiUrl(`/api/slugs/${encodeURIComponent(slug)}/users/${id}`), { method: "DELETE" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } else if (["promote","demote","pause","activate"].includes(choice)) {
+      const res = await fetch(apiUrl(`/api/slugs/${encodeURIComponent(slug)}/users/${id}`), {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: choice }),
+      });
+      const txt = await res.text();
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${txt}`);
+    } else {
+      alert("Unknown action");
+      return;
+    }
+    await loadUsers();
+  } catch (e) {
+    console.error("users.row action error:", e);
+    alert("Update failed: " + e.message);
   }
-  await loadUsers();
 });
 
 init();
